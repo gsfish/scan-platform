@@ -1,0 +1,64 @@
+{% extends "dashboard/layout.html" %}
+
+{% set active = 2 %}
+
+{% block dashboard_title %}添加任务{% endblock %}
+
+{% block dashboard_content %}
+  <br />
+  <form class="form-horizontal" action="{{ url_for('dashboard_scan') }}" method="post">
+    <div class="form-group">
+      <label for="inputIP" class="col-sm-1 control-label">IP</label>
+      <div class="col-sm-11">
+        <input name="ip_addr" type="text" class="form-control" id="inputIP" placeholder="目标 IP（多个用分号分隔）">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="inputDomain" class="col-sm-1 control-label">域名</label>
+      <div class="col-sm-11">
+        <input name="domain" type="text" class="form-control" id="inputDomain" placeholder="目标域名（多个用分号分隔）">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="inputCookies" class="col-sm-1 control-label">Cookies</label>
+      <div class="col-sm-11">
+        <input name="cookies" type="text" class="form-control" id="inputCookies" placeholder="自定义 Cookies">
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-1 col-sm-11">
+        <button type="submit" class="btn btn-primary">开始扫描</button>
+      </div>
+    </div>
+  </form>
+{% endblock %}
+
+{% block js_plugin %}
+  {% if status %}
+    <div id="statusModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel">
+      <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="popModalLabel">任务提示</h4>
+          </div>
+          <div class="modal-body">
+          {% if status == 'succeed' %}
+            <p>目标添加成功</p>
+            <p>任务 ID：{{ task_id }}</p>
+          {% elif status == 'fail' %}
+            <p>目标添加失败</p>
+          {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block js_load %}
+  {{ super() }}
+  <script>$('#statusModal').modal('show')</script>
+{% endblock %}

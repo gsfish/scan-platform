@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block head %}
+  {{ super() }}
+  <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block subtitle %}控制面板{% endblock %}
+
+{% block body %}
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">{{ self.title() }}</a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ session.user }} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('dashboard_setting') }}">设置</a></li>
+              <li><a href="{{ url_for('logout') }}">退出</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+          <li {% if active == 1 %}class="active"{% endif %}><a href="{{ url_for('dashboard') }}">概述 · Overview</a></li>
+          <li {% if active == 2 %}class="active"{% endif %}><a href="{{ url_for('dashboard_scan') }}">扫描 · Scan</a></li>
+          <li {% if active == 3 %}class="active"{% endif %}><a href="{{ url_for('dashboard_result') }}">结果 · Result</a></li>
+          <li {% if active == 4 %}class="active"{% endif %}><a href="{{ url_for('dashboard_export') }}">导出 · Export</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <h1 class="page-header">{% block dashboard_title %}{% endblock %}</h1>
+
+        {% block dashboard_content %}
+        {% endblock %}
+
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block js_load %}
+  {{ super() }}
+  <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+  <script src="{{ url_for('static', filename='js/holder.min.js') }}"></script>
+{% endblock %}
