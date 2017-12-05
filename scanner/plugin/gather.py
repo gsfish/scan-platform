@@ -16,7 +16,7 @@ import logging
 class DNSRecon():
     """DNSRecon plugin.
 
-    Plugin ID: 1
+    Stage: 10
     Github: https://github.com/darkoperator/dnsrecon
     """
     def __init__(self, queue, **kwargs):
@@ -24,7 +24,7 @@ class DNSRecon():
         self.__task_id = kwargs['task_id']
         self.__domain = kwargs['domain']
         self.__subdomain = []
-        self.__plugin_id = 1
+        self.__stage = 10
 
 
     def __del__(self):
@@ -44,7 +44,7 @@ class DNSRecon():
                              cwd=cwd, universal_newlines=True)
         stderr = p.communicate(cmd_in)[1]
         if stderr:
-            logging.error(' '.join(cmd))
+            logging.debug(' '.join(cmd))
             logging.error(stderr.strip())
             return None
         else:
@@ -69,18 +69,22 @@ class DNSRecon():
     def get_result(self):
         """Return the result of DNSRecon.
 
-        :return: subdomain. [{'address': ip_addr, 'name': subdomain}, ...]
+        :return: subdomain.
+        [
+            {
+                'address': ip_addr,
+                'name': subdomain
+            },
+            ...
+        ]
         """
-
-        self.__subdomain = json.loads('[{"address":"202.201.0.62","name":"shpg.lzu.edu.cn"},{"address":"202.201.0.161","name":"ids.lzu.edu.cn"}]')
-
         return self.__subdomain
 
 
     def sync_result(self):
         result = {
             'task_id': self.__task_id,
-            'plugin_id': self.__plugin_id,
+            'stage': self.__stage,
             'result_type': 'subdomain',
             'result': self.get_result()
         }
