@@ -1,6 +1,6 @@
 {% extends "dashboard/layout.html" %}
 
-{% set active = 2 %}
+{% set active = 3 %}
 
 {% block dashboard_title %}添加任务{% endblock %}
 
@@ -8,21 +8,22 @@
   <br />
   <form class="form-horizontal" action="{{ url_for('dashboard_scan') }}" method="post">
     <div class="form-group">
-      <label for="inputIP" class="col-sm-1 control-label">IP</label>
+      <label for="inputDomain" class="col-sm-1 control-label">域名</label>
       <div class="col-sm-11">
-        <input name="ip_addr" type="text" class="form-control" id="inputIP" placeholder="目标 IP（多个用分号分隔）">
+        <textarea name="domain" class="form-control" rows="3" id="inputDomain" placeholder="目标域名（多个以分号分隔）"></textarea>
       </div>
     </div>
     <div class="form-group">
-      <label for="inputDomain" class="col-sm-1 control-label">域名</label>
+      <label for="inputIP" class="col-sm-1 control-label">IP</label>
       <div class="col-sm-11">
-        <input name="domain" type="text" class="form-control" id="inputDomain" placeholder="目标域名（多个用分号分隔）">
+        <textarea name="ip_addr" class="form-control" rows="3" id="inputIP" placeholder="目标 IP（多个以分号分隔）"></textarea>
       </div>
     </div>
     <div class="form-group">
       <label for="inputCookies" class="col-sm-1 control-label">Cookies</label>
       <div class="col-sm-11">
-        <input name="cookies" type="text" class="form-control" id="inputCookies" placeholder="自定义 Cookies">
+        <textarea name="cookies" class="form-control" rows="5" id="inputCookies" placeholder="自定义 HTTP Cookies"></textarea>
+{#        <input name="cookies" type="text" class="form-control" id="inputCookies" placeholder="自定义 Cookies">#}
       </div>
     </div>
     <div class="form-group">
@@ -42,10 +43,10 @@
             <h4 class="modal-title" id="popModalLabel">任务提示</h4>
           </div>
           <div class="modal-body">
-          {% if status == 'succeed' %}
+          {% if status == 'ok' %}
             <p>目标添加成功</p>
             <p>任务 ID：{{ task_id }}</p>
-          {% elif status == 'fail' %}
+          {% elif status == 'error' %}
             <p>目标添加失败</p>
           {% endif %}
           </div>

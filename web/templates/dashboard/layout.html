@@ -3,6 +3,7 @@
 {% block head %}
   {{ super() }}
   <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
 {% endblock %}
 
 {% block subtitle %}控制面板{% endblock %}
@@ -36,9 +37,11 @@
       <div class="col-sm-3 col-md-2 sidebar">
         <ul class="nav nav-sidebar">
           <li {% if active == 1 %}class="active"{% endif %}><a href="{{ url_for('dashboard') }}">概述 · Overview</a></li>
-          <li {% if active == 2 %}class="active"{% endif %}><a href="{{ url_for('dashboard_scan') }}">扫描 · Scan</a></li>
-          <li {% if active == 3 %}class="active"{% endif %}><a href="{{ url_for('dashboard_result') }}">结果 · Result</a></li>
-          <li {% if active == 4 %}class="active"{% endif %}><a href="{{ url_for('dashboard_export') }}">导出 · Export</a></li>
+          <li {% if active == 2 %}class="active"{% endif %}><a href="{{ url_for('dashboard_workflow') }}">流程 · Workflow</a></li>
+          <li {% if active == 3 %}class="active"{% endif %}><a href="{{ url_for('dashboard_scan') }}">扫描 · Scan</a></li>
+          <li {% if active == 4 %}class="active"{% endif %}><a href="{{ url_for('dashboard_result') }}">结果 · Result</a></li>
+          <li {% if active == 5 %}class="active"{% endif %}><a href="{{ url_for('dashboard_relation') }}">关系 · Relation</a></li>
+          <li {% if active == 6 %}class="active"{% endif %}><a href="{{ url_for('dashboard_export') }}">导出 · Export</a></li>
         </ul>
       </div>
       <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">

@@ -1,29 +1,67 @@
 {% extends "dashboard/layout.html" %}
 
-{% set active = 3 %}
+{% set active = 4 %}
 
 {% block dashboard_title %}任务详情{% endblock %}
 
 {% block dashboard_content %}
+  <h2 class="sub-header">ID: {{ result.task_id }}</h2>
+  <div class="progress">
+    <div class="progress-bar" role="progressbar" aria-valuenow="{{ result.stage|cus_stage(True) }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ result.stage|cus_stage(True) }}%;">
+      {{ result.stage|cus_stage(True) }}%
+    </div>
+  </div>
+
+  <h2 class="sub-header">子域名</h2>
   <div class="table-responsive">
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>#</th>
-          <th>Header</th>
-          <th>Header</th>
-          <th>Header</th>
-          <th>Header</th>
+          <th>ID</th>
+          <th>域名</th>
+          <th>IP</th>
         </tr>
       </thead>
       <tbody>
+      {% if result.subdomain %}
+        {% for row in result.subdomain %}
+          {% for rec in row %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ rec.name }}</td>
+              <td>{{ rec.address }}</td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="sub-header">主机漏洞</h2>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
         <tr>
-          <td>1,001</td>
-          <td>Lorem</td>
-          <td>ipsum</td>
-          <td>dolor</td>
-          <td>sit</td>
+          <th>IP</th>
+          <th>端口</th>
+          <th>漏洞</th>
+          <th></th>
         </tr>
+      </thead>
+      <tbody>
+      {% if result.host_vuln %}
+        {% for row in result.host_vuln %}
+          {% for rec in row.vuln %}
+            <tr>
+              <td>{{ row.ip_addr }}</td>
+              <td>{{ rec.port }}</td>
+              <td>{{ rec.name }}</td>
+              <td width="10px"><a href="{{ url_for('dashboard_result_port_detail', task_id=result.task_id, port=rec.port, name=rec.name) }}" type="button" class="btn btn-success glyphicon glyphicon-search"></></td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
       </tbody>
     </table>
   </div>
