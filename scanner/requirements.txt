@@ -1,2 +1,3 @@
 dnspython
 netaddr
+python-nmap

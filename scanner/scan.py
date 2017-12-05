@@ -15,13 +15,13 @@ from plugin import *
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s',
-                    filename='scanner.log', filemode='w')
+                    filename='scan.log', filemode='w')
 
 config = ConfigParser.ConfigParser()
 config.read('config.ini')
 
-api_status_query = 'http://localhost:5000/task/status/'
-api_result_sync = 'http://localhost:5000/task/control/add/'
+api_status_query = 'http://localhost:8080/task/status/'
+api_result_sync = 'http://localhost:8080/task/control/add/'
 
 stomp_host = config.get('stomp', 'host')
 stomp_port = config.getint('stomp', 'port')
@@ -59,8 +59,7 @@ class TaskReceiver(ConnectionListener):
         global task_queue
         global current_task
 
-        task_data = body
-        task = json.loads(task_data)
+        task = json.loads(body)
         current_task.add(task['task_id'])
         task_queue.put(task)
 
@@ -98,7 +97,7 @@ def status_query_thread(trigger):
             try:
                 status = urllib2.urlopen(api_status_query+str(task_id)).read()
             except Exception:
-                logging.exception('thread: ' % threading.currentThread().name)
+                logging.exception('thread: %s' % threading.currentThread().name)
                 logging.error('error when query status (tid: %d)' % task_id)
                 continue
             if status == 'cancel':
@@ -138,26 +137,39 @@ def result_sync_thread(trigger):
 
 
 def scan_thread(trigger, task):
-    global result_queue
+    global result_queue, current_task
 
-    if not trigger.is_set():
+    if trigger.is_set():
+        current_task.remove(task['task_id'])
+        print '[*] %s stop' % threading.current_thread().name
+        return
 
-        plugin_dnsrecon = DNSRecon(result_queue, **task)
-        # plugin_dnsrecon.start()
-        subdomain = plugin_dnsrecon.get_result()
-        logging.info('return dnsrecon result (tid: %d)' % task['task_id'])
+    plugin_dnsrecon = DNSRecon(result_queue, **task)
+    logging.info('launch dnsrecon plugin (tid: %d)' % task['task_id'])
+    plugin_dnsrecon.start()
+    result_subdomain = plugin_dnsrecon.get_result()
+    if trigger.is_set() or not result_subdomain:
+        current_task.remove(task['task_id'])
+        print '[*] %s stop' % threading.current_thread().name
+        return
 
-        print 'subdomain:'
-        for i in subdomain:
-            print i
-        print
+    plugin_dnsrecon.sync_result()
+    if trigger.is_set():
+        current_task.remove(task['task_id'])
+        print '[*] %s stop' % threading.current_thread().name
+        return
 
-        plugin_dnsrecon.sync_result()
+    plugin_nmap = Nmap(result_queue, result_subdomain, **task)
+    logging.info('launch nmap plugin (tid: %d)' % task['task_id'])
+    plugin_nmap.start()
+    result_nmap = plugin_nmap.get_result()
+    if trigger.is_set() or not result_nmap:
+        current_task.remove(task['task_id'])
+        print '[*] %s stop' % threading.current_thread().name
+        return
 
-        print 'result sync'
-
-
-        trigger.wait(1)
+    logging.info('task complete (tid: %d)' % task['task_id'])
+    current_task.remove(task['task_id'])
     print '[*] %s stop' % threading.current_thread().name
 
 
@@ -165,7 +177,7 @@ def main_thread():
     global task_queue
     global current_task
 
-    print'[*] %s start' % threading.currentThread().name
+    print '[*] %s start' % threading.currentThread().name
 
     stop_main = threading.Event()
     register(atexit, stop_main, threading.currentThread().name)
