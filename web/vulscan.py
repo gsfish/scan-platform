@@ -106,9 +106,32 @@ def start_scan(form):
         return False
 
 
+def filter_stage(value, numeric=False):
+    if numeric:
+        if not value:
+            return 0
+        return int(value / 10) * 10
+    else:
+        if not value:
+            return 'danger'
+        if value < 100:
+            return 'warning'
+        if value == 100:
+            return 'success'
+
+
+def filter_omit(value):
+    max_len = 30
+    if len(value) > max_len:
+        return value[:max_len-3] + '...'
+    else:
+        return value
+
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # return render_template('index.html')
+    return redirect(url_for('login'))
 
 
 @app.route('/login/', methods=['GET', 'POST'])
@@ -139,7 +162,16 @@ def logout():
 def dashboard():
     if not get_login():
         return redirect(url_for('login'))
-    return render_template('dashboard/overview.html')
+    db = Database()
+    result = db.check_task_stage_count()
+    count = {
+        's1': result[0],
+        's2': result[1],
+        's3': result[2],
+        's4': result[3],
+        's5': result[4]
+    }
+    return render_template('dashboard/overview.html', count=count)
 
 
 @app.route('/dashboard/setting/')
@@ -147,6 +179,13 @@ def dashboard_setting():
     if not get_login():
         return redirect(url_for('login'))
     return render_template('dashboard/setting.html')
+
+
+@app.route('/dashboard/workflow/')
+def dashboard_workflow():
+    if not get_login():
+        return redirect(url_for('login'))
+    return render_template('dashboard/workflow.html')
 
 
 @app.route('/task/status/<int:task_id>')
@@ -167,15 +206,15 @@ def task_control_cancel(task_id):
 
 @app.route('/task/control/add/<int:task_id>/<result_type>', methods=['POST'])
 def task_control_add(task_id, result_type):
-    if not request.json or not request.json.get('task_id') or not request.json.get('plugin_id') or not request.json.get('result_type'):
+    if not request.json or not request.json.get('task_id') or not request.json.get('stage') or not request.json.get('result_type'):
         abort(400)
 
     task_id = request.json.get('task_id')
-    plugin_id = request.json.get('plugin_id')
+    stage = request.json.get('stage')
     result_type = request.json.get('result_type')
     result = json.dumps(request.json.get('result'))
     db = Database()
-    if db.create_task_result(task_id, plugin_id, result_type, result):
+    if db.create_task_result(task_id, stage, result_type, result):
         return 'ok'
     else:
         return 'error'
@@ -185,7 +224,7 @@ def task_control_add(task_id, result_type):
 def task_control_check(task_id, result_type):
     db = Database()
     results = db.check_task_result(task_id, result_type)
-    return json.dumps(results)
+    return jsonify(results)
 
 
 @app.route('/dashboard/scan/', methods=['GET', 'POST'])
@@ -200,8 +239,8 @@ def dashboard_scan():
         if request.form['ip_addr'] or request.form['domain']:
             task_id = start_scan(request.form)
             if task_id:
-                return render_template('dashboard/scan.html', status='succeed', task_id=task_id)
-        return render_template('dashboard/scan.html', status='fail')
+                return render_template('dashboard/scan.html', status='ok', task_id=task_id)
+        return render_template('dashboard/scan.html', status='error')
 
 
 @app.route('/dashboard/result/')
@@ -218,7 +257,41 @@ def dashboard_result():
 def dashboard_result_detail(task_id):
     if not get_login():
         return redirect(url_for('login'))
-    return render_template('dashboard/result_detail.html', task_id=task_id)
+    db = Database()
+    stage = db.check_task_stage(task_id)
+    subdomain = db.check_task_result(task_id, 'subdomain')
+    host_vuln = db.check_task_result(task_id, 'host_vuln')
+    result = {
+        'task_id': task_id,
+        'stage': stage,
+        'subdomain': subdomain,
+        'host_vuln': host_vuln
+    }
+    return render_template('dashboard/result_detail.html', result=result)
+
+
+@app.route('/dashboard/result/detail/<int:task_id>/<int:port>/<name>')
+def dashboard_result_port_detail(task_id, port, name):
+    if not get_login():
+        return redirect(url_for('login'))
+    db = Database()
+    stage = db.check_task_stage(task_id)
+    subdomain = db.check_task_result(task_id, 'subdomain')
+    host_vuln = db.check_task_result(task_id, 'host_vuln')
+    result = {
+        'task_id': task_id,
+        'stage': stage,
+        'subdomain': subdomain,
+        'host_vuln': host_vuln
+    }
+    return render_template('dashboard/result_detail.html', result=result)
+
+
+@app.route('/dashboard/relation/')
+def dashboard_relation():
+    if not get_login():
+        return redirect(url_for('login'))
+    return render_template('dashboard/relation.html')
 
 
 @app.route('/dashboard/export/')
@@ -229,5 +302,7 @@ def dashboard_export():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
     app.jinja_env.trim_blocks = True
+    app.jinja_env.filters['cus_stage'] = filter_stage
+    app.jinja_env.filters['cus_omit'] = filter_omit
+    app.run(host='0.0.0.0', port=8080, debug=True)
