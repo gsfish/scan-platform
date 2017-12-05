@@ -58,7 +58,7 @@ class Database():
             self.curs.execute(sql, parm)
         except Exception:
             self.conn.rollback()
-            logging.exception('sql: %s' % sql)
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
             abort(500)
         else:
             self.conn.commit()
@@ -72,13 +72,13 @@ class Database():
         try:
             self.curs.execute(sql, parm)
         except Exception:
-            logging.exception('sql: ' % sql)
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
             abort(500)
         else:
             if self.curs.rowcount != 0:
                 uid = self.curs.fetchone()[0]
                 return uid
-        else:
+            else:
                 return False
 
 
@@ -89,7 +89,7 @@ class Database():
             self.curs.execute(sql, parm)
         except Exception:
             self.conn.rollback()
-            logging.exception('sql: %s' % sql)
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
             abort(500)
         else:
             self.conn.commit()
@@ -97,16 +97,23 @@ class Database():
 
 
     def check_task_info(self, uid):
-        sql = 'SELECT tid, ctime FROM task WHERE uid = %s ORDER BY ctime DESC;'
+        sql = '''SELECT task.tid, domain, ip_addr, ctime, MAX(stage)
+                 FROM task LEFT JOIN result
+                 ON uid = %s AND task.tid = result.tid
+                 GROUP BY task.tid
+                 ORDER BY ctime DESC;'''
         parm = (uid,)
         try:
             self.curs.execute(sql, parm)
         except Exception:
-            logging.exception('sql: %s' % sql)
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
             abort(500)
         else:
             fetch_result = self.curs.fetchall()
-            result = [{'tid': row[0], 'ctime': row[1]} for row in fetch_result]
+            result = [
+                {'tid': row[0], 'domain': row[1], 'ip_addr': row[2], 'ctime': row[3], 'stage': row[4]}
+                for row in fetch_result
+            ]
             return result
 
 
@@ -116,7 +123,7 @@ class Database():
         try:
             self.curs.execute(sql, parm)
         except Exception:
-            logging.exception('sql: %s' % sql)
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
             abort(500)
         else:
             if self.curs.rowcount != 0:
@@ -136,7 +143,7 @@ class Database():
         try:
             self.curs.execute(sql, parm)
         except Exception:
-            logging.exception('sql: %s' % sql)
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
             abort(500)
         else:
             if self.curs.rowcount != 0:
@@ -145,14 +152,14 @@ class Database():
                 return False
 
 
-    def create_task_result(self, tid, pid, type, result):
-        sql = 'INSERT INTO result(tid, pid, type, result) VALUES (%s, %s, %s, %s)'
-        parm = (tid, pid, type, result)
+    def create_task_result(self, tid, stage, type, result):
+        sql = 'INSERT INTO result(tid, stage, type, result) VALUES (%s, %s, %s, %s);'
+        parm = (tid, stage, type, result)
         try:
             self.curs.execute(sql, parm)
         except Exception:
             self.conn.rollback()
-            logging.exception('sql: %s' % sql)
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
             abort(500)
         else:
             self.conn.commit()
@@ -160,16 +167,53 @@ class Database():
 
 
     def check_task_result(self, tid, type):
-        sql = 'SELECT result FROM result WHERE tid = %s AND type = %s'
+        sql = 'SELECT result FROM result WHERE tid = %s AND type = %s;'
         parm = (tid, type)
         try:
             self.curs.execute(sql, parm)
+        except Exception:
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
+            abort(500)
+        else:
+            if self.curs.rowcount != 0:
+                result = self.curs.fetchall()
+                return [json.loads(r[0]) for r in result]
+            else:
+                return None
+
+
+    def check_task_stage(self, tid):
+        sql = 'SELECT MAX(stage) FROM result WHERE tid = %s;'
+        parm = (tid,)
+        try:
+            self.curs.execute(sql, parm)
+        except Exception:
+            logging.exception('sql: %s parm: %s' % (sql, str(parm)))
+            abort(500)
+        else:
+            if self.curs.rowcount != 0:
+                result = self.curs.fetchone()[0]
+                return result
+            else:
+                return None
+
+
+    def check_task_stage_count(self):
+        sql = '''SELECT
+                 COUNT(DISTINCT CASE WHEN stage < 20 THEN tid END) AS s1,
+                 COUNT(DISTINCT CASE WHEN 20 <= stage AND stage < 40 THEN tid END) AS s2,
+                 COUNT(DISTINCT CASE WHEN 40 <= stage AND stage < 60 THEN tid END) AS s3,
+                 COUNT(DISTINCT CASE WHEN 60 <= stage AND stage < 80 THEN tid END) AS s4,
+                 COUNT(DISTINCT CASE WHEN 80 <= stage THEN tid END) AS s5
+                 FROM result;'''
+        try:
+            self.curs.execute(sql)
         except Exception:
             logging.exception('sql: %s' % sql)
             abort(500)
         else:
             if self.curs.rowcount != 0:
-                results = self.curs.fetchall()
-                return [json.loads(r[0]) for r in results]
+                result = self.curs.fetchone()
+                return result
             else:
-                return ()
+                return None
