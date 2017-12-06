@@ -1,0 +1,74 @@
+{% extends "dashboard/layout.html" %}
+
+{% set active = 5 %}
+
+{% block dashboard_title %}目标关系{% endblock %}
+
+{% block dashboard_content %}
+  <div id="chartGraph" style="height:400px;"></div>
+{#{% endblock %}#}
+{##}
+{#{% block js_load %}#}
+{#  {{ super() }}#}
+  <script type="text/javascript">
+    var chartGraph = echarts.init(document.getElementById('chartGraph'));
+    chartGraph.showLoading();
+    $.get("{{ url_for('static', filename='data/les-miserables.gexf') }}", function (xml) {
+      chartGraph.hideLoading();
+
+      var graph = echarts.dataTool.gexf.parse(xml);
+      var categories = [];
+      for (var i = 0; i < 9; i++) {
+        categories[i] = {
+          name: '类目' + i
+        };
+      }
+      graph.nodes.forEach(function (node) {
+        node.itemStyle = null;
+        node.symbolSize = 10;
+        node.value = node.symbolSize;
+        node.category = node.attributes.modularity_class;
+        // Use random x, y
+        node.x = node.y = null;
+        node.draggable = true;
+      });
+      option = {
+        title: {
+          text: 'Les Miserables',
+          subtext: 'Default layout',
+          top: 'bottom',
+          left: 'right'
+        },
+        tooltip: {},
+        legend: [{
+          // selectedMode: 'single',
+          data: categories.map(function (a) {
+            return a.name;
+          })
+        }],
+        animation: false,
+        series : [
+          {
+            name: 'Les Miserables',
+            type: 'graph',
+            layout: 'force',
+            data: graph.nodes,
+            links: graph.links,
+            categories: categories,
+            roam: true,
+            label: {
+              normal: {
+                position: 'right'
+              }
+            },
+            force: {
+              repulsion: 100
+            }
+          }
+        ]
+      };
+
+      chartGraph.setOption(option);
+    }, 'xml');
+  </script>
+{% endblock %}
