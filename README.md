@@ -5,9 +5,9 @@
 ## Installation
 
 1. Use `web/init.sql` to initialize database
-2. set database account under `scanner/config.ini`
-3. download the release of [Apache ActiveMQ](http://activemq.apache.org/download.html), and rename as `manager`
-4. run the following commands to install requirements:
+2. Set database account under `scanner/config.ini`
+3. Download the latest release of [Apache ActiveMQ](http://activemq.apache.org/download.html), and rename as `manager`
+4. Run the following commands to install requirements:
 
 ```
 sudo apt install -y nmap openjdk-8-jre
