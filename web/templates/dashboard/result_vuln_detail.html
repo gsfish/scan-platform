@@ -1,0 +1,30 @@
+{% extends "dashboard/layout.html" %}
+
+{% set active = 4 %}
+
+{% block dashboard_title %}任务详情{% endblock %}
+
+{% block dashboard_content %}
+  <h2 class="sub-header">ID: {{ result.task_id }}</h2>
+  <div class="progress">
+    <div class="progress-bar" role="progressbar" aria-valuenow="{{ result.stage|cus_stage(True) }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ result.stage|cus_stage(True) }}%;">
+      {{ result.stage|cus_stage(True) }}%
+    </div>
+  </div>
+
+  <h2 class="sub-header">漏洞详情</h2>
+  {% if result.host_vuln %}
+    {% for row in result.host_vuln %}
+      {% for rec in row.vuln %}
+        {% if rec.port == result.port and rec.name == result.name %}
+        <div class="panel panel-default">
+          <div class="panel-heading">{{ rec.name }}</div>
+          <div class="panel-body">
+            {{ rec.detail }}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
+{% endblock %}

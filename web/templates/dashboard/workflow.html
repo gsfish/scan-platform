@@ -1,0 +1,99 @@
+{% extends "dashboard/layout.html" %}
+
+{% set active = 2 %}
+
+{% block dashboard_title %}扫描流程{% endblock %}
+
+{% block dashboard_content %}
+  <div id="chartGraph" style="height:800px;"></div>
+{% endblock %}
+
+{% block js_load %}
+  {{ super() }}
+  <script type="text/javascript">
+    var chartGraph = echarts.init(document.getElementById('chartGraph'));
+    var option = {
+      title: {
+        text: 'ScanThread'
+      },
+      tooltip: {},
+      animationDurationUpdate: 1500,
+      animationEasingUpdate: 'quinticInOut',
+      series : [
+        {
+          type: 'graph',
+          layout: 'none',
+          symbolSize: 100,
+          roam: true,
+          label: {
+            normal: {
+              show: true
+            }
+          },
+          edgeSymbol: ['circle', 'arrow'],
+          edgeSymbolSize: [4, 10],
+          edgeLabel: {
+            normal: {
+              textStyle: {
+                fontSize: 20
+              }
+            }
+          },
+          data: [{
+            name: '任务添加 / 0',
+            x: 500,
+            y: 100
+          }, {
+            name: '域名收集 / 0-20',
+            x: 500,
+            y: 250
+          }, {
+            name: '端口扫描 / 20-40',
+            x: 650,
+            y: 250
+          }, {
+            name: '主机检测 / 40-60',
+            x: 350,
+            y: 400
+          }, {
+            name: 'Web 检测 / 60-80',
+            x: 650,
+            y: 400
+          }, {
+            name: '检测完成 / 100',
+            x: 500,
+            y: 550
+          }],
+          // links: [],
+          links: [{
+            source: '任务添加 / 0',
+            target: '域名收集 / 0-20',
+          }, {
+            source: '域名收集 / 0-20',
+            target: '端口扫描 / 20-40'
+          }, {
+            source: '域名收集 / 0-20',
+            target: '主机检测 / 40-60'
+          }, {
+            source: '端口扫描 / 20-40',
+            target: 'Web 检测 / 60-80'
+          }, {
+            source: '主机检测 / 40-60',
+            target: '检测完成 / 100'
+          }, {
+            source: 'Web 检测 / 60-80',
+            target: '检测完成 / 100'
+          }],
+          lineStyle: {
+            normal: {
+              opacity: 0.9,
+              width: 2,
+              curveness: 0
+            }
+          }
+        }
+      ]
+    };
+    chartGraph.setOption(option);
+  </script>
+{% endblock %}

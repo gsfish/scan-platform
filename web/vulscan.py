@@ -11,7 +11,7 @@ from stomp import *
 from database import Database
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s',
+logging.logging.basicConfig(level=logging.logging.DEBUG, format='%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s',
                     filename='web.log', filemode='w')
 
 config = ConfigParser.ConfigParser()
@@ -276,15 +276,15 @@ def dashboard_result_port_detail(task_id, port, name):
         return redirect(url_for('login'))
     db = Database()
     stage = db.check_task_stage(task_id)
-    subdomain = db.check_task_result(task_id, 'subdomain')
     host_vuln = db.check_task_result(task_id, 'host_vuln')
     result = {
         'task_id': task_id,
         'stage': stage,
-        'subdomain': subdomain,
+        'port': port,
+        'name': name,
         'host_vuln': host_vuln
     }
-    return render_template('dashboard/result_detail.html', result=result)
+    return render_template('dashboard/result_vuln_detail.html', result=result)
 
 
 @app.route('/dashboard/relation/')
@@ -305,4 +305,4 @@ if __name__ == '__main__':
     app.jinja_env.trim_blocks = True
     app.jinja_env.filters['cus_stage'] = filter_stage
     app.jinja_env.filters['cus_omit'] = filter_omit
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=False)
