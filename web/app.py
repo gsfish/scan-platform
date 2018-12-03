@@ -6,20 +6,19 @@ import time
 import random
 import logging
 import ConfigParser
+
 from flask import *
 from stomp import *
+
 from database import Database
 
 
-logging.logging.basicConfig(level=logging.logging.DEBUG, format='%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s',
-                    filename='web.log', filemode='w')
-
+logging.logging.basicConfig(level=logging.logging.DEBUG, filename='web.log', filemode='w',
+                            format='%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s')
 config = ConfigParser.ConfigParser()
 config.read('config.ini')
-
 app = Flask(__name__)
 app.secret_key = config.get('app', 'secret_key')
-
 stomp_host = config.get('stomp', 'host')
 stomp_port = config.getint('stomp', 'port')
 stomp_user = config.get('stomp', 'username')
@@ -27,7 +26,7 @@ stomp_pswd = config.get('stomp', 'password')
 stomp_dest = config.get('stomp', 'dest')
 
 
-def get_login():
+def is_login():
     if session.get('login'):
         return True
     else:
@@ -160,7 +159,7 @@ def logout():
 
 @app.route('/dashboard/')
 def dashboard():
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     db = Database()
     result = db.check_task_stage_count()
@@ -176,14 +175,14 @@ def dashboard():
 
 @app.route('/dashboard/setting/')
 def dashboard_setting():
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     return render_template('dashboard/setting.html')
 
 
 @app.route('/dashboard/workflow/')
 def dashboard_workflow():
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     return render_template('dashboard/workflow.html')
 
@@ -206,7 +205,10 @@ def task_control_cancel(task_id):
 
 @app.route('/task/control/add/<int:task_id>/<result_type>', methods=['POST'])
 def task_control_add(task_id, result_type):
-    if not request.json or not request.json.get('task_id') or not request.json.get('stage') or not request.json.get('result_type'):
+    if not request.json or \
+        not request.json.get('task_id') or \
+        not request.json.get('stage') or \
+        not request.json.get('result_type'):
         abort(400)
 
     task_id = request.json.get('task_id')
@@ -229,7 +231,7 @@ def task_control_check(task_id, result_type):
 
 @app.route('/dashboard/scan/', methods=['GET', 'POST'])
 def dashboard_scan():
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
 
     if request.method == 'GET':
@@ -245,7 +247,7 @@ def dashboard_scan():
 
 @app.route('/dashboard/result/')
 def dashboard_result():
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     uid = session['uid']
     db = Database()
@@ -255,7 +257,7 @@ def dashboard_result():
 
 @app.route('/dashboard/result/detail/<int:task_id>')
 def dashboard_result_detail(task_id):
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     db = Database()
     stage = db.check_task_stage(task_id)
@@ -272,7 +274,7 @@ def dashboard_result_detail(task_id):
 
 @app.route('/dashboard/result/detail/<int:task_id>/<int:port>/<name>')
 def dashboard_result_port_detail(task_id, port, name):
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     db = Database()
     stage = db.check_task_stage(task_id)
@@ -289,14 +291,14 @@ def dashboard_result_port_detail(task_id, port, name):
 
 @app.route('/dashboard/relation/')
 def dashboard_relation():
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     return render_template('dashboard/relation.html')
 
 
 @app.route('/dashboard/export/')
 def dashboard_export():
-    if not get_login():
+    if not is_login():
         return redirect(url_for('login'))
     return render_template('dashboard/export.html')
 

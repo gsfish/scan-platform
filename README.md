@@ -1,10 +1,10 @@
-# vulScan
+# scan-platform
 
 ![](./images/framework.png)
 
 ## Installation
 
-1. Use `web/init.sql` to initialize database
+1. Use `web/schema.sql` to initialize database
 2. Set database account under `scanner/config.ini`
 3. Download the latest release of [Apache ActiveMQ](http://activemq.apache.org/download.html), and rename as `manager`
 4. Run the following commands to install requirements:
@@ -21,7 +21,7 @@ As for `Web` module:
 
 ```
 ./manager/bin/activemq/start
-python web/vulscan.py
+python web/app.py
 ```
 
 As for `Scanner` module, which can be run distributedly:

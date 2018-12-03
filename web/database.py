@@ -6,6 +6,7 @@ import json
 import hashlib
 import logging
 import ConfigParser
+
 import MySQLdb
 from flask import abort
 
@@ -28,11 +29,9 @@ class Database():
         self.conn = MySQLdb.connect(**db_config)
         self.curs = self.conn.cursor()
 
-
     def __del__(self):
         self.curs.close()
         self.conn.close()
-
 
     def gen_uid(self, username, password):
         sha256 = hashlib.sha256()
@@ -41,13 +40,11 @@ class Database():
         sha256.update(password)
         return sha256.hexdigest()[:32]
 
-
     def gen_hash(self, username, password):
         salt = 'vulscan'
         sha256 = hashlib.sha256()
         sha256.update(hashlib.sha256(username+salt).hexdigest()+password)
         return sha256.hexdigest()[:32]
-
 
     def create_user(self, username, password):
         uid = self.gen_uid(username, password)
@@ -63,7 +60,6 @@ class Database():
         else:
             self.conn.commit()
             return True
-
 
     def check_user(self, username, password):
         password = self.gen_hash(username, password)
@@ -81,7 +77,6 @@ class Database():
             else:
                 return False
 
-
     def create_task(self, tid, uid, domain, ip_addr, ctime, type):
         sql = 'INSERT INTO task(tid, uid, domain, ip_addr, ctime, type) VALUES (%s, %s, %s, %s, %s, %s);'
         parm = (tid, uid, domain, ip_addr, ctime, type)
@@ -94,7 +89,6 @@ class Database():
         else:
             self.conn.commit()
             return True
-
 
     def check_task_info(self, uid):
         sql = '''SELECT task.tid, domain, ip_addr, ctime, MAX(stage)
@@ -116,7 +110,6 @@ class Database():
             ]
             return result
 
-
     def check_task_status(self, tid):
         sql = 'SELECT type FROM task WHERE tid = %s;'
         parm = (tid,)
@@ -131,7 +124,6 @@ class Database():
                 return type
             else:
                 return 'null'
-
 
     def change_task_status(self, tid, want):
         if want == 0:
@@ -151,7 +143,6 @@ class Database():
             else:
                 return False
 
-
     def create_task_result(self, tid, stage, type, result):
         sql = 'INSERT INTO result(tid, stage, type, result) VALUES (%s, %s, %s, %s);'
         parm = (tid, stage, type, result)
@@ -164,7 +155,6 @@ class Database():
         else:
             self.conn.commit()
             return True
-
 
     def check_task_result(self, tid, type):
         sql = 'SELECT result FROM result WHERE tid = %s AND type = %s;'
@@ -181,7 +171,6 @@ class Database():
             else:
                 return None
 
-
     def check_task_stage(self, tid):
         sql = 'SELECT MAX(stage) FROM result WHERE tid = %s;'
         parm = (tid,)
@@ -196,7 +185,6 @@ class Database():
                 return result
             else:
                 return None
-
 
     def check_task_stage_count(self):
         sql = '''SELECT
